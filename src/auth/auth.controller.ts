@@ -1,8 +1,14 @@
-import { Controller, Post, Body, Get, UseGuards } from "@nestjs/common";
+import { Controller, Post, Body, Get, UseGuards, Req } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { LoginUserDto } from "./dto";
 import { AuthGuard } from "@nestjs/passport";
+import { Auth, GetUser, RawHeaders } from "./decorators";
+import { User } from "./entities/user.entity";
+import { RoleProtected } from "./decorators/role-protected.decorator";
+import { ValidRoles } from "./interfaces";
+import { UserRoleGuard } from "./guards/user-role.guard";
+
 
 
 
@@ -25,11 +31,42 @@ export class AuthController {
 
     @Get('private')
     @UseGuards( AuthGuard())
-    testingPrivateRoute(){
-        
+    testingPrivateRoute(
+        @Req() request: Express.Request,
+        @GetUser() user: User,
+        @GetUser('email') userEmail: string,
+
+        @RawHeaders() rawHeaders: string[],
+    ){
         return {
             ok: true,
-            message: 'private route'
+            message: 'private route',
+            user,
+            rawHeaders
+        }
+    }
+
+    @Get('private2')
+    @RoleProtected( ValidRoles.admin, ValidRoles.superUser)
+    @UseGuards( AuthGuard(), UserRoleGuard)
+    privateRoute2(
+        @GetUser() user: User
+    ){
+        return {
+            ok: true,
+            user
+        }
+    }
+
+
+    @Get('private3')
+    @Auth( ValidRoles.admin, ValidRoles.superUser)//tiene que ser uno de esos roles para acceder a la ruta
+    privateRoute3(
+        @GetUser() user: User
+    ){
+        return {
+            ok: true,
+            user
         }
     }
 
