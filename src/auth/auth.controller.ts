@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Req } from "@nestjs/common";
+import { Controller, Post, Body, Get, UseGuards, Req, Headers } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { LoginUserDto } from "./dto";
@@ -8,10 +8,13 @@ import { User } from "./entities/user.entity";
 import { RoleProtected } from "./decorators/role-protected.decorator";
 import { ValidRoles } from "./interfaces";
 import { UserRoleGuard } from "./guards/user-role.guard";
+import { IncomingHttpHeaders } from "http";
+import { ApiTags } from "@nestjs/swagger";
 
 
 
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -29,6 +32,14 @@ export class AuthController {
         
     }
 
+    @Get('check-status')
+    @Auth()
+    checkAuthStatus(
+        @GetUser() user: User,   
+    ){
+        return this.authService.checkAuthStatus( user );
+    }
+
     @Get('private')
     @UseGuards( AuthGuard())
     testingPrivateRoute(
@@ -37,12 +48,14 @@ export class AuthController {
         @GetUser('email') userEmail: string,
 
         @RawHeaders() rawHeaders: string[],
+        @Headers() headers: IncomingHttpHeaders
     ){
         return {
             ok: true,
             message: 'private route',
             user,
-            rawHeaders
+            rawHeaders,
+            headers
         }
     }
 

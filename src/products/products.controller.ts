@@ -12,18 +12,25 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Product } from './entities';
 import { PaginationDto } from '../common/dtos/pagination.dto';
 import { Auth, GetUser } from '../auth/decorators';
 import { ValidRoles } from '../auth/interfaces';
 import { User } from '../auth/entities/user.entity';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
+
+@ApiTags('Products')//se usa para la documentacion de swagger 
 @Controller('products')
 //@Auth()//si lo coloco aqui cualquiera que use estas rutas debe estar autenticado
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @Auth(ValidRoles.admin)
+  @Auth()
+  @ApiResponse({status: 201, description: 'Product was created', type: Product}) //respuesta esperada en el endpoint 
+  @ApiResponse({status: 400, description: 'Bad Request'})
+  @ApiResponse({status: 403, description: 'Forbidden'})
   create(@Body() createProductDto: CreateProductDto,
   @GetUser() user: User, ) {
     return this.productsService.create(createProductDto, user);
